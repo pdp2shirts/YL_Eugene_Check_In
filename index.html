@@ -5,41 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Check-In</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { background: #007bff; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; font-size: 16px; }
+        :root { --primary: #007bff; --success: #28a745; --bg: #f4f7f6; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { margin: 0 0 10px 0; color: #333; text-align: center; font-size: 24px; }
+        p { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #444; }
+        input { width: 100%; padding: 12px; margin-bottom: 18px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; }
+        button { background: var(--primary); color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #message { margin-top: 20px; padding: 12px; border-radius: 8px; display: none; text-align: center; font-weight: 500; }
     </style>
 </head>
 <body>
+
+<div class="card">
     <h2 id="displayDay">Event Check-In</h2>
+    <p>Enter your details to register your attendance and earn raffle tickets!</p>
+    
     <form id="checkInForm">
-        <input type="text" name="name" placeholder="Full Name" required>
-        <input type="email" name="email" placeholder="Email Address" required>
-        <button type="submit">Check In</button>
+        <label>First Name</label>
+        <input type="text" name="firstName" placeholder="John" required>
+        
+        <label>Last Name</label>
+        <input type="text" name="lastName" placeholder="Doe" required>
+        
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="john@email.com" required>
+        
+        <label>Mobile Number</label>
+        <input type="tel" name="mobile" placeholder="541-555-0123" required>
+        
+        <button type="submit" id="submitBtn">Submit Check-In</button>
     </form>
+    
+    <div id="message"></div>
+</div>
 
-    <script>
-        // Get the 'day' from the URL (e.g., ?day=1)
-        const params = new URLSearchParams(window.location.search);
-        const day = params.get('day') || "1";
-        document.getElementById('displayDay').innerText = "Checking in for Day " + day;
+<script>
+    // 1. Setup Day detection from URL
+    const params = new URLSearchParams(window.location.search);
+    const day = params.get('day') || "1"; // Defaults to Day 1 if no parameter exists
+    document.getElementById('displayDay').innerText = "Day " + day + " Check-In";
 
-        document.getElementById('checkInForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = {
-                name: formData.get('name'),
-                email: formData.get('email'),
-                day: day
-            };
+    const form = document.getElementById('checkInForm');
+    const btn = document.getElementById('submitBtn');
+    const msg = document.getElementById('message');
 
-            // Replace with your Google Apps Script Web App URL
-            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+    // 2. Your specific Google Apps Script URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz092uD8Nu_8OjX6bMyYd2K5g383w_jMsotAc0TtXqFMEM1TepyZgv5qXX14YE4Ra-mhg/exec';
 
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) })
-                .then(res => alert('Success! You are checked in.'))
-                .catch(err => console.error('Error!', err.message));
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        btn.disabled = true;
+        btn.innerText = "Checking you in...";
+
+        const formData = new FormData(this);
+        const payload = {
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            mobile: formData.get('mobile'),
+            day: day
+        };
+
+        // Send data to Google Sheets via Apps Script
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            cache: 'no-cache',
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            msg.style.display = "block";
+            msg.style.background = "#d4edda";
+            msg.style.color = "#155724";
+            msg.innerText = "✅ Success! You are checked in for Day " + day + ".";
+            form.style.display = "none"; // Hide form on success
+            document.querySelector('p').style.display = "none";
+        })
+        .catch(err => {
+            console.error('Submission Error:', err);
+            msg.style.display = "block";
+            msg.style.background = "#f8d7da";
+            msg.style.color = "#721c24";
+            msg.innerText = "❌ Connection error. Please show this screen to staff.";
+            btn.disabled = false;
+            btn.innerText = "Try Again";
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>
