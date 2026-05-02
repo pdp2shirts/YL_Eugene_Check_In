@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Check-In</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h2 id="displayDay">Event Check-In</h2>
+    <form id="checkInForm">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
+        <button type="submit">Check In</button>
+    </form>
+
+    <script>
+        // Get the 'day' from the URL (e.g., ?day=1)
+        const params = new URLSearchParams(window.location.search);
+        const day = params.get('day') || "1";
+        document.getElementById('displayDay').innerText = "Checking in for Day " + day;
+
+        document.getElementById('checkInForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                day: day
+            };
+
+            // Replace with your Google Apps Script Web App URL
+            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) })
+                .then(res => alert('Success! You are checked in.'))
+                .catch(err => console.error('Error!', err.message));
+        });
+    </script>
+</body>
+</html>
